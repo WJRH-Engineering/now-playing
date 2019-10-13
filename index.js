@@ -8,6 +8,8 @@ let most_recent = {}
 
 radio.on("new-track", async function(track){
 
+	console.log(track)
+
 	//try to look up some additional metadata about this track
 	const metadata = await last_fm.lookup(track)
 
@@ -22,7 +24,7 @@ radio.on("new-track", async function(track){
 	const album = get(metadata, "track.album.title")
 	const image = get(metadata, "track.album.image.3.#text")
 
-	most_recent = { title, artist, album, image }
+	most_recent = {isRobo: track.isRobo, title, artist, album, image }
 })
 
 server.get("/now-playing", function(req, res){
