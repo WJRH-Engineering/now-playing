@@ -22,27 +22,25 @@ const pause = function(duration) {
 const begin_heartbeat = async function(period){
 	while(true){
 		await pause(period)
-		await write_remote('HEARTBEAT')
+		log.info('HEARTBEAT')
 	}
 }
 
-// Sends a post request to the remote_url with the given data
-const write_remote = async function(event, data){
-	const request = fetch(remote_url, {
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json'
-			},
-			method: "POST",
-			body: JSON.stringify({ 
-				event: event,
-				data: data,
-				sender: "now-playing" 
-			})
-		}).catch(err => console.log(err))
+// // Sends a post request to the remote_url with the given data
+// const write_remote = async function(event, data){
+// 	const request = fetch(remote_url, {
+// 			headers: {
+// 				'Accept': 'application/json',
+// 				'Content-Type': 'application/json'
+// 			},
+// 			method: "POST",
+// 			body: JSON.stringify({ 
+// 				data: data,
+// 			})
+// 		}).catch(err => console.log(err))
 
-	await request
-}
+// 	await request
+// }
 
 const remote = new stream.Writable({
 	write: async function(chunk, encoding, next){
@@ -52,8 +50,8 @@ const remote = new stream.Writable({
 				'Content-Type': 'application/json'
 			},
 			method: "POST",
-			body: JSON.stringify({ event: "LOG", data: chunk.toString('utf8')})
-		}).catch(err => {})
+			body: JSON.stringify({data: chunk.toString('utf8')})
+		}).catch(err => console.log(err))
 		next()
 	}
 })
@@ -75,5 +73,4 @@ const log = bunyan.createLogger({
 })
 
 module.exports = log
-
 begin_heartbeat(5)
