@@ -2,6 +2,8 @@ const fetch = require('node-fetch')
 const equals = require('deep-equal')
 const EventEmitter = require('events')
 
+const get = require("lodash.get")
+
 const radio = new EventEmitter()
 
 // wrap setTimeout function in a promise api
@@ -40,9 +42,19 @@ const get_latest = async function(){
 
 
 	if(data.length == 2){ 
-		output = {isRobo: true, title: data[0], artist: data[1] }
+		output = {
+			isRobo: true, 
+			track: {
+				title: data[0], artist: data[1] 
+			}
+		}
 	} else {
-		output = {isRobo: true, title: data_raw }
+		output = {
+			isRobo: true, 
+			track: {
+				title: data_raw
+			}
+		}
 	}
 
 	return output
@@ -56,7 +68,15 @@ const listen = async function(time_ms) {
 		await pause(time_ms)
 		next = await get_latest()
 
-		if(!equals(last, next)) radio.emit("new-track", next)
+		// if any part of the track data has changed, emit new-track event
+		if(!equals(last, next)){
+			radio.emit("new-track", next)
+		}
+
+		// if the episode has changed, emit the new-show event
+		if(get(last, 'episode.id') != get(next, 'episode.id')){
+			radio.emit("new-show", next)
+		}
 
 		last = next
 	}

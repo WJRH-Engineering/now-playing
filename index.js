@@ -4,14 +4,19 @@ const server = require('./server.js')
 const last_fm = require('./last-fm.js')
 const radio = require("./listener")
 
+const log = require("./log.js")
+
 let most_recent = {}
 
-radio.on("new-track", async function(track){
+radio.on("new-track", async function({track, ...rest}){
 
-	console.log(track)
+	let metadata = {}
 
-	//try to look up some additional metadata about this track
-	const metadata = await last_fm.lookup(track)
+	// if the track title and author exist,
+	// try to look up some additional metadata about them
+	if(track.title && track.artist){
+		metadata = await last_fm.lookup(track)
+	}
 
 	const title = 
 			get(metadata, "track.name") 
@@ -24,7 +29,14 @@ radio.on("new-track", async function(track){
 	const album = get(metadata, "track.album.title")
 	const image = get(metadata, "track.album.image.3.#text")
 
-	most_recent = {isRobo: track.isRobo, title, artist, album, image }
+	most_recent = {title, artist, album, image, ...rest}
+
+	log.info(most_recent, "new-track")
+})
+
+radio.on("new-show", async function(show){
+	const show_name = show.program ? show.program.name : "RoboDJ"
+	log.info({show_name, ...show.program}, "new-show")
 })
 
 server.get("/now-playing", function(req, res){
